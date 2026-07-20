@@ -13,6 +13,7 @@ import {
 import { authOptions } from "@/lib/auth";
 import { readStore } from "@/lib/json/store";
 import { SyncButton } from "@/components/dashboard/SyncButton";
+import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { formatPlaytime } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -50,6 +51,30 @@ export default async function DashboardPage() {
   const mostPlayed = [...games]
     .sort((a, b) => b.playtimeForeverMinutes - a.playtimeForeverMinutes)
     .slice(0, 5);
+
+  const monthMap = new Map<string, number>();
+  for (const achievement of achievements) {
+    if (!achievement.achieved || !achievement.unlockTime) continue;
+    const date = new Date(achievement.unlockTime * 1000);
+    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    monthMap.set(key, (monthMap.get(key) ?? 0) + 1);
+  }
+
+  const monthlyActivity = [...monthMap.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-12)
+    .map(([month, count]) => ({
+      month: new Date(`${month}-01`).toLocaleDateString("fr-FR", { month: "short", year: "2-digit" }),
+      count,
+    }));
+
+  const progressDistribution = [
+    { name: "0 %", value: summaries.filter((item) => item.percentage === 0).length },
+    { name: "1–49 %", value: summaries.filter((item) => item.percentage > 0 && item.percentage < 50).length },
+    { name: "50–79 %", value: summaries.filter((item) => item.percentage >= 50 && item.percentage < 80).length },
+    { name: "80–99 %", value: summaries.filter((item) => item.percentage >= 80 && item.percentage < 100).length },
+    { name: "100 %", value: completedGames.length },
+  ];
 
   return (
     <div className="flex flex-col gap-6">
@@ -197,6 +222,8 @@ export default async function DashboardPage() {
           )}
         </section>
       </div>
+
+      <DashboardCharts monthly={monthlyActivity} distribution={progressDistribution} />
 
       <section className="glass-panel p-5">
         <div className="flex items-center justify-between gap-4">
