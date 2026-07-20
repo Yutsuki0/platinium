@@ -74,6 +74,7 @@ async function ensureDatabase() {
   if (!databaseReady) {
     databaseReady = (async () => {
       const sql = getSql();
+
       await sql`
         CREATE TABLE IF NOT EXISTS platinum_app_store (
           id TEXT PRIMARY KEY,
@@ -81,16 +82,27 @@ async function ensureDatabase() {
           updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
       `;
-      const rows = await sql<{ data: JsonStore }[]>`SELECT data FROM platinum_app_store WHERE id = 'global' LIMIT 1`;
+
+      const rows = await sql<{ data: JsonStore }[]>`
+        SELECT data
+        FROM platinum_app_store
+        WHERE id = 'global'
+        LIMIT 1
+      `;
+
       if (!rows.length) {
-        const local = await readFileStore();
-        await sql`INSERT INTO platinum_app_store (id, data) VALUES ('global', ${sql.json(local as any)}) ON CONFLICT (id) DO NOTHING`;
+        await sql`
+          INSERT INTO platinum_app_store (id, data)
+          VALUES ('global', ${sql.json(EMPTY_STORE as any)})
+          ON CONFLICT (id) DO NOTHING
+        `;
       }
     })().catch((error) => {
       databaseReady = null;
       throw error;
     });
   }
+
   await databaseReady;
 }
 
