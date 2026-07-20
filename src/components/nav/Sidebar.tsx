@@ -35,11 +35,11 @@ const NAV_ITEMS = [
   { href: "/settings", label: "settings.config.ts", icon: Settings, tint: "text-emerald-300" },
 ] as const;
 
-export function Sidebar() {
+export function Sidebar({ embedded = false }: { embedded?: boolean }) {
   const pathname = usePathname();
 
   return (
-    <aside className="ide-explorer hidden lg:flex lg:w-[246px] lg:shrink-0 lg:flex-col">
+    <aside className={cn("ide-explorer flex h-full w-full shrink-0 flex-col", !embedded && "hidden lg:flex lg:w-[246px]")}>
       <div className="ide-explorer-title">
         <span>EXPLORER</span>
         <span className="tracking-normal text-emerald-300/50">•••</span>

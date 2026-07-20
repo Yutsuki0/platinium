@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import type { StoredAchievementSummary, StoredGame } from "@/lib/json/store";
 import { formatPlaytime } from "@/lib/utils";
+import { useGameModes, type GameMode } from "@/lib/games/useGameModes";
 
 type SortMode =
   | "favorites"
@@ -23,6 +24,7 @@ type SortMode =
   | "name-asc"
   | "name-desc";
 type StatusFilter = "all" | "favorites" | "completed" | "in-progress" | "not-started" | "not-analysed";
+type ModeFilter = "all" | "solo" | "online";
 
 export function GamesLibrary({
   games,
@@ -40,6 +42,9 @@ export function GamesLibrary({
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("favorites");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [modeFilter, setModeFilter] = useState<ModeFilter>("all");
+  const appIds = useMemo(() => games.map((game) => game.appId), [games]);
+  const { modes, loading: modesLoading } = useGameModes(appIds);
   const [favoriteAppIds, setFavoriteAppIds] = useState(() => new Set(initialFavoriteAppIds));
   const [pendingAppId, setPendingAppId] = useState<number | null>(null);
 
@@ -66,6 +71,9 @@ export function GamesLibrary({
     return games
       .filter((game) => game.name.toLocaleLowerCase("fr-FR").includes(normalizedSearch))
       .filter((game) => {
+        const mode = modes[game.appId] ?? "unknown";
+        if (modeFilter === "solo" && mode !== "solo" && mode !== "mixed") return false;
+        if (modeFilter === "online" && mode !== "online" && mode !== "mixed") return false;
         const summary = summaryByAppId.get(game.appId);
         if (statusFilter === "favorites") return favoriteAppIds.has(game.appId);
         if (statusFilter === "completed") return summary?.total && summary.percentage === 100;
@@ -92,7 +100,7 @@ export function GamesLibrary({
         if (sortMode === "name-desc") return b.name.localeCompare(a.name, "fr");
         return a.name.localeCompare(b.name, "fr");
       });
-  }, [favoriteAppIds, games, search, sortMode, statusFilter, summaryByAppId]);
+  }, [favoriteAppIds, games, modeFilter, modes, search, sortMode, statusFilter, summaryByAppId]);
 
   async function toggleFavorite(appId: number) {
     setPendingAppId(appId);
@@ -158,7 +166,8 @@ export function GamesLibrary({
           </label>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[10px] uppercase tracking-[0.18em] text-emerald-200/45">Progression</span>
           {filterButtons.map((filter) => (
             <button
               key={filter.value}
@@ -173,6 +182,29 @@ export function GamesLibrary({
               {filter.label} <span className="ml-1 text-[10px] opacity-65">{filter.count}</span>
             </button>
           ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-emerald-400/10 pt-3">
+          <span className="mr-1 text-[10px] uppercase tracking-[0.18em] text-emerald-200/45">Type de jeu</span>
+          {([
+            ["all", "Tous les modes"],
+            ["solo", "Jeux solo"],
+            ["online", "Jeux en ligne"],
+          ] as Array<[ModeFilter, string]>).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setModeFilter(value)}
+              className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                modeFilter === value
+                  ? "border-emerald-300/50 bg-emerald-300/15 text-white"
+                  : "border-white/10 bg-white/[0.025] text-slate-400 hover:border-emerald-300/25 hover:text-white"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+          {modesLoading ? <span className="text-[10px] text-emerald-200/40">Analyse Steam en cours…</span> : null}
         </div>
       </div>
 
@@ -228,6 +260,11 @@ export function GamesLibrary({
                     {completed ? (
                       <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full border border-emerald-300/25 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-200 backdrop-blur">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Terminé
+                      </div>
+                    ) : null}
+                    {modes[game.appId] && modes[game.appId] !== "unknown" ? (
+                      <div className="absolute bottom-3 right-3 rounded-full border border-emerald-300/20 bg-black/50 px-2.5 py-1 text-[10px] uppercase tracking-wide text-emerald-100/80 backdrop-blur">
+                        {modes[game.appId] === "solo" ? "Solo" : modes[game.appId] === "online" ? "En ligne" : "Solo + en ligne"}
                       </div>
                     ) : null}
                   </div>
