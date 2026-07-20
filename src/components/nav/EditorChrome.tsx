@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { FreeformCanvas } from "@/components/nav/FreeformCanvas";
 import {
   Boxes,
   Bug,
@@ -191,7 +190,7 @@ export function EditorChrome({ children }: { children: React.ReactNode }) {
             </div>
             <main className="ide-page">
               <SpatialCore />
-              <FreeformCanvas>{children}</FreeformCanvas>
+              {children}
             </main>
           </div>
         </section>

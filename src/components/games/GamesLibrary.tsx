@@ -24,7 +24,7 @@ type SortMode =
   | "name-asc"
   | "name-desc";
 type StatusFilter = "all" | "favorites" | "completed" | "in-progress" | "not-started" | "not-analysed";
-type ModeFilter = "all" | "solo" | "online";
+type ModeFilter = "all" | "solo" | "online" | "mixed";
 
 export function GamesLibrary({
   games,
@@ -72,8 +72,7 @@ export function GamesLibrary({
       .filter((game) => game.name.toLocaleLowerCase("fr-FR").includes(normalizedSearch))
       .filter((game) => {
         const mode = modes[game.appId] ?? "unknown";
-        if (modeFilter === "solo" && mode !== "solo" && mode !== "mixed") return false;
-        if (modeFilter === "online" && mode !== "online" && mode !== "mixed") return false;
+        if (modeFilter !== "all" && mode !== modeFilter) return false;
         const summary = summaryByAppId.get(game.appId);
         if (statusFilter === "favorites") return favoriteAppIds.has(game.appId);
         if (statusFilter === "completed") return summary?.total && summary.percentage === 100;
@@ -190,6 +189,7 @@ export function GamesLibrary({
             ["all", "Tous les modes"],
             ["solo", "Jeux solo"],
             ["online", "Jeux en ligne"],
+            ["mixed", "Solo + en ligne"],
           ] as Array<[ModeFilter, string]>).map(([value, label]) => (
             <button
               key={value}
