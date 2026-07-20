@@ -1,27 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Gamepad2, RotateCcw, Zap } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Sidebar } from "@/components/nav/Sidebar";
 import { EditorChrome } from "@/components/nav/EditorChrome";
-import { DesktopStatsWidget } from "@/components/nav/DesktopStatsWidget";
 
-type WindowId = "explorer" | "editor" | "steam" | "stats" | "quick";
+type WindowId = "explorer" | "editor";
 type Frame = { x: number; y: number; width: number; height: number; z: number };
 type FrameMap = Record<WindowId, Frame>;
 
 const DEFAULTS: FrameMap = {
-  explorer: { x: 22, y: 70, width: 260, height: 690, z: 3 },
-  editor: { x: 300, y: 24, width: 1120, height: 850, z: 2 },
-  steam: { x: 24, y: 24, width: 258, height: 122, z: 4 },
-  stats: { x: 24, y: 780, width: 360, height: 225, z: 5 },
-  quick: { x: 1438, y: 40, width: 255, height: 190, z: 1 },
+  explorer: { x: 22, y: 24, width: 270, height: 760, z: 3 },
+  editor: { x: 310, y: 24, width: 1180, height: 860, z: 2 },
 };
 
-const STORAGE_KEY = "platinum-desktop-layout-v3";
+const STORAGE_KEY = "platinum-desktop-layout-v4";
 
 export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
   const desktopRef = useRef<HTMLDivElement>(null);
+  const windowRefs = useRef<Record<WindowId, HTMLDivElement | null>>({ explorer: null, editor: null });
   const [frames, setFrames] = useState<FrameMap>(DEFAULTS);
   const [ready, setReady] = useState(false);
 
@@ -40,71 +37,134 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
   const bringToFront = useCallback((id: WindowId) => {
     setFrames((current) => {
       const maxZ = Math.max(...Object.values(current).map((frame) => frame.z));
+      if (current[id].z === maxZ) return current;
       return { ...current, [id]: { ...current[id], z: maxZ + 1 } };
     });
   }, []);
 
   const startDrag = useCallback((id: WindowId, event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || (event.target as HTMLElement).closest("a,button,input,select,textarea,[data-no-window-drag]")) return;
+    if (event.button !== 0) return;
+    if ((event.target as HTMLElement).closest("a,button,input,select,textarea,[data-no-window-drag]")) return;
+
     event.preventDefault();
     bringToFront(id);
+
+    const node = windowRefs.current[id];
+    const desktop = desktopRef.current;
+    if (!node || !desktop) return;
+
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    const start = frames[id];
     const startX = event.clientX;
     const startY = event.clientY;
-    const start = frames[id];
+    let nextX = start.x;
+    let nextY = start.y;
 
     const onMove = (moveEvent: PointerEvent) => {
-      const bounds = desktopRef.current?.getBoundingClientRect();
-      const width = bounds?.width ?? window.innerWidth;
-      const height = bounds?.height ?? window.innerHeight;
-      setFrames((current) => ({
-        ...current,
-        [id]: {
-          ...current[id],
-          x: Math.min(width - 90, Math.max(-start.width + 90, start.x + moveEvent.clientX - startX)),
-          y: Math.min(height - 38, Math.max(0, start.y + moveEvent.clientY - startY)),
-        },
-      }));
+      const bounds = desktop.getBoundingClientRect();
+      nextX = Math.min(bounds.width - 90, Math.max(-start.width + 90, start.x + moveEvent.clientX - startX));
+      nextY = Math.min(bounds.height - 38, Math.max(0, start.y + moveEvent.clientY - startY));
+      node.style.left = `${nextX}px`;
+      node.style.top = `${nextY}px`;
     };
+
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      setFrames((current) => ({ ...current, [id]: { ...current[id], x: nextX, y: nextY } }));
     };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onUp, { once: true });
   }, [bringToFront, frames]);
 
   const startResize = useCallback((id: WindowId, event: React.PointerEvent<HTMLButtonElement>) => {
-    event.preventDefault(); event.stopPropagation(); bringToFront(id);
-    const startX = event.clientX; const startY = event.clientY; const start = frames[id];
+    event.preventDefault();
+    event.stopPropagation();
+    bringToFront(id);
+
+    const node = windowRefs.current[id];
+    const desktop = desktopRef.current;
+    if (!node || !desktop) return;
+
+    const start = frames[id];
+    const startX = event.clientX;
+    const startY = event.clientY;
     const minimums: Record<WindowId, [number, number]> = {
-      explorer: [210, 340], editor: [560, 400], steam: [220, 105], stats: [300, 190], quick: [220, 160],
+      explorer: [220, 360],
+      editor: [620, 440],
     };
+    let nextWidth = start.width;
+    let nextHeight = start.height;
+
     const onMove = (moveEvent: PointerEvent) => {
+      const bounds = desktop.getBoundingClientRect();
       const [minWidth, minHeight] = minimums[id];
-      setFrames((current) => ({ ...current, [id]: { ...current[id], width: Math.max(minWidth, start.width + moveEvent.clientX - startX), height: Math.max(minHeight, start.height + moveEvent.clientY - startY) } }));
+      const maxWidth = Math.max(minWidth, bounds.width - Math.max(0, start.x) - 8);
+      const maxHeight = Math.max(minHeight, bounds.height - start.y - 8);
+      nextWidth = Math.min(maxWidth, Math.max(minWidth, start.width + moveEvent.clientX - startX));
+      nextHeight = Math.min(maxHeight, Math.max(minHeight, start.height + moveEvent.clientY - startY));
+      node.style.width = `${nextWidth}px`;
+      node.style.height = `${nextHeight}px`;
     };
-    const onUp = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
-    window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
+
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      setFrames((current) => ({ ...current, [id]: { ...current[id], width: nextWidth, height: nextHeight } }));
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerup", onUp, { once: true });
   }, [bringToFront, frames]);
 
-  const reset = () => { setFrames(DEFAULTS); localStorage.removeItem(STORAGE_KEY); };
+  const reset = () => {
+    setFrames(DEFAULTS);
+    localStorage.removeItem(STORAGE_KEY);
+  };
 
-  const Window = ({ id, title, children, className = "" }: { id: WindowId; title: string; children: React.ReactNode; className?: string }) => (
-    <div className={`desktop-window ${className}`} style={{ left: frames[id].x, top: frames[id].y, width: frames[id].width, height: frames[id].height, zIndex: frames[id].z }} onPointerDown={() => bringToFront(id)}>
-      <div className="desktop-window-dragbar" onPointerDown={(event) => startDrag(id, event)}><span className="desktop-window-dot" /><span>{title}</span><span className="desktop-drag-hint">drag</span></div>
-      <div className="desktop-window-body">{children}</div>
-      <button className="desktop-resize-handle" aria-label={`Redimensionner ${title}`} onPointerDown={(event) => startResize(id, event)} />
+  const renderWindow = (
+    id: WindowId,
+    title: string,
+    content: React.ReactNode,
+    className: string
+  ) => (
+    <div
+      ref={(node) => { windowRefs.current[id] = node; }}
+      className={`desktop-window ${className}`}
+      style={{
+        left: frames[id].x,
+        top: frames[id].y,
+        width: frames[id].width,
+        height: frames[id].height,
+        zIndex: frames[id].z,
+      }}
+      onPointerDown={() => bringToFront(id)}
+    >
+      <div className="desktop-window-dragbar" onPointerDown={(event) => startDrag(id, event)}>
+        <span className="desktop-window-dot" />
+        <span>{title}</span>
+        <span className="desktop-drag-hint">drag</span>
+      </div>
+      <div className="desktop-window-body">{content}</div>
+      <button
+        className="desktop-resize-handle"
+        aria-label={`Redimensionner ${title}`}
+        onPointerDown={(event) => startResize(id, event)}
+      />
     </div>
   );
 
   return (
     <div ref={desktopRef} className="desktop-workspace hidden lg:block">
-      <button type="button" className="desktop-reset" onClick={reset}><RotateCcw className="h-4 w-4" /><span>Reset layout</span></button>
-      <Window id="steam" title="Steam identity" className="steam-logo-window"><div className="steam-logo-card"><span className="steam-logo-orbit"><Gamepad2 className="h-8 w-8" /></span><div><strong>PLATINUM.EXE</strong><small>STEAM COMPLETION OS</small></div></div></Window>
-      <Window id="explorer" title="Explorer" className="explorer-window"><Sidebar embedded /></Window>
-      <Window id="editor" title="Steam Completion OS" className="editor-window"><EditorChrome>{children}</EditorChrome></Window>
-      <Window id="stats" title="Game statistics" className="stats-window"><DesktopStatsWidget /></Window>
-      <Window id="quick" title="Quick launch" className="quick-window"><div className="quick-launch-grid"><a href="/games"><Gamepad2 />Bibliothèque</a><a href="/hunt"><Zap />Lancer une chasse</a></div></Window>
+      <button type="button" className="desktop-reset" onClick={reset}>
+        <RotateCcw className="h-4 w-4" />
+        <span>Reset layout</span>
+      </button>
+
+      {renderWindow("explorer", "Explorer", <Sidebar embedded />, "explorer-window")}
+      {renderWindow("editor", "Steam Completion OS", <EditorChrome>{children}</EditorChrome>, "editor-window")}
     </div>
   );
 }

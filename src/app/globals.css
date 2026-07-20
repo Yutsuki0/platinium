@@ -284,3 +284,87 @@ code,.font-mono{font-family:"Cascadia Code","JetBrains Mono",ui-monospace,SFMono
 @keyframes steamFloat{50%{transform:translateY(-4px) rotate(4deg)}}
 .desktop-stats-widget{height:100%;overflow:auto;padding:14px}.desktop-stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.desktop-stat-cell{display:flex;min-width:0;flex-direction:column;align-items:center;gap:4px;border:1px solid rgba(83,255,143,.1);border-radius:12px;background:rgba(53,255,122,.035);padding:10px 5px;color:#69ff96}.desktop-stat-cell strong{font:800 16px ui-monospace,monospace;color:white}.desktop-stat-cell span{font-size:9px;color:rgba(203,255,219,.48)}.desktop-progress-line{height:6px;margin-top:14px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.05)}.desktop-progress-line span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#1aca5c,#70ff9c);box-shadow:0 0 18px rgba(53,255,122,.3)}.desktop-stats-footer{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:rgba(210,255,226,.45)}.desktop-stats-footer strong{color:#9dffba}.desktop-widget-link{display:block;margin-top:12px;border-top:1px solid rgba(83,255,143,.08);padding-top:10px;font:600 10px ui-monospace,monospace;color:#65ff95}.quick-launch-grid{display:grid;height:100%;gap:9px;padding:14px}.quick-launch-grid a{display:flex;align-items:center;gap:10px;border:1px solid rgba(83,255,143,.11);border-radius:12px;background:rgba(53,255,122,.035);padding:12px;color:rgba(222,255,232,.72);font:600 11px ui-monospace,monospace;transition:.18s}.quick-launch-grid a:hover{border-color:rgba(83,255,143,.35);background:rgba(53,255,122,.08);color:white;transform:translateY(-1px)}.quick-launch-grid svg{width:18px;color:#68ff96}.hunt-objectives-panel{align-self:end;border:1px solid rgba(83,255,143,.13);border-radius:18px;background:rgba(1,12,6,.68);padding:16px;backdrop-filter:blur(18px)}.hunt-objective{display:flex;width:100%;align-items:center;gap:10px;margin-top:9px;border:1px solid rgba(255,255,255,.07);border-radius:11px;background:rgba(255,255,255,.025);padding:10px;text-align:left;font-size:12px;color:#b7c9bd;transition:.18s}.hunt-objective:hover{border-color:rgba(83,255,143,.24);color:white}.hunt-objective.done{border-color:rgba(83,255,143,.25);background:rgba(53,255,122,.08);color:#9dffba;text-decoration:line-through}.hunt-objective.done svg{fill:rgba(53,255,122,.2)}
 @media (prefers-reduced-motion:reduce){.steam-logo-orbit{animation:none}}
+
+/* ===== DESKTOP V4 — two-window mode, smoother rendering ===== */
+.desktop-workspace {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100dvh !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  contain: strict;
+}
+
+.desktop-window {
+  will-change: left, top, width, height;
+  transform: translateZ(0);
+  backdrop-filter: blur(16px) saturate(120%);
+}
+
+.desktop-window-dragbar,
+.desktop-resize-handle {
+  touch-action: none;
+}
+
+.editor-window .ide-window,
+.editor-window .ide-workbench,
+.editor-window .ide-editor-area {
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-window .ide-editor-scroll {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(53, 255, 122, .72) rgba(1, 12, 6, .62);
+}
+
+.editor-window .ide-editor-scroll::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.editor-window .ide-editor-scroll::-webkit-scrollbar-track {
+  border-left: 1px solid rgba(53, 255, 122, .09);
+  background:
+    repeating-linear-gradient(180deg, rgba(53,255,122,.035) 0 1px, transparent 1px 7px),
+    rgba(1, 12, 6, .78);
+}
+
+.editor-window .ide-editor-scroll::-webkit-scrollbar-thumb {
+  min-height: 44px;
+  border: 3px solid rgba(1, 12, 6, .88);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #78ffa3, #25d961 58%, #11983f);
+  box-shadow: inset 0 0 0 1px rgba(225,255,235,.18), 0 0 12px rgba(53,255,122,.23);
+}
+
+.editor-window .ide-editor-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a3ffbe, #3cff7c 58%, #16b84e);
+}
+
+.editor-window .ide-editor-scroll::-webkit-scrollbar-corner {
+  background: #010c06;
+}
+
+/* The old extra desktop widgets are intentionally disabled. */
+.steam-logo-window,
+.stats-window,
+.quick-window {
+  display: none !important;
+}
+
+/* Reduce GPU load without losing the visual identity. */
+.desktop-window::before { opacity: .55; }
+.spatial-core { opacity: .34; }
+.spatial-cube,
+.spatial-orbit,
+.spatial-pulse { animation-play-state: paused; }
+body::before { opacity: .16; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .desktop-window { transition: box-shadow .16s ease, border-color .16s ease; }
+}
