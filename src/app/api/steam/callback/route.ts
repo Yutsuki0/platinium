@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySteamOpenIdCallback } from "@/lib/steam/openid";
+import { provisionUserFromSteamProfile } from "@/lib/steam/sync";
 import { createLoginTicket } from "@/lib/steam/ticket";
+import { SteamServiceError } from "@/lib/steam/errors";
 
 export const dynamic = "force-dynamic";
 
 function getPublicOrigin(request: NextRequest): string {
-  const configuredUrl = process.env.NEXTAUTH_URL?.trim();
+  const configured = process.env.NEXTAUTH_URL?.trim();
 
-  if (configuredUrl) {
-    return configuredUrl.replace(/\/$/, "");
+  if (configured) {
+    return configured.replace(/\/$/, "");
   }
 
-  const protocol =
+  const proto =
     request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ??
     "https";
 
@@ -20,7 +22,7 @@ function getPublicOrigin(request: NextRequest): string {
     request.headers.get("host");
 
   if (host) {
-    return `${protocol}://${host}`;
+    return `${proto}://${host}`;
   }
 
   return request.nextUrl.origin;
@@ -34,18 +36,11 @@ export async function GET(request: NextRequest) {
       request.nextUrl.searchParams
     );
 
-    if (!steamId64) {
-      throw new Error("Steam n’a retourné aucun identifiant.");
-    }
+    const user = await provisionUserFromSteamProfile(steamId64);
 
-    /*
-     * On utilise temporairement le Steam ID comme identifiant utilisateur.
-     * Cela évite d’écrire dans data/store.json, qui n’est pas persistant
-     * sur Vercel.
-     */
     const ticket = createLoginTicket({
-      userId: steamId64,
-      steamId64,
+      userId: user.id,
+      steamId64: user.steamId64,
     });
 
     const redirectUrl = new URL("/auth/steam-complete", origin);
@@ -56,9 +51,11 @@ export async function GET(request: NextRequest) {
     console.error("[STEAM_CALLBACK_ERROR]", error);
 
     const message =
-      error instanceof Error
+      error instanceof SteamServiceError
         ? error.message
-        : "La connexion avec Steam a échoué.";
+        : error instanceof Error
+          ? error.message
+          : "La connexion avec Steam a échoué. Merci de réessayer.";
 
     const redirectUrl = new URL("/login", origin);
     redirectUrl.searchParams.set("error", message);
