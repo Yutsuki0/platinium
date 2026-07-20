@@ -196,7 +196,7 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
       </button>
 
       {renderWindow("explorer", "Explorer", <Sidebar embedded />, "explorer-window")}
-      {renderWindow("editor", "Steam Completion OS", <EditorChrome>{children}</EditorChrome>, "editor-window")}
+      {renderWindow("editor", "FULLCLEAR // COMMAND CENTER", <EditorChrome>{children}</EditorChrome>, "editor-window")}
     </div>
   );
 }

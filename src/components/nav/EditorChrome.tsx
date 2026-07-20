@@ -106,9 +106,9 @@ export function EditorChrome({ children }: { children: React.ReactNode }) {
         </div>
         <div className="ide-title">
           <Code2 className="h-3.5 w-3.5" />
-          <span>PLATINUM.EXE</span>
+          <span>FULLCLEAR</span>
           <span className="text-emerald-300/40">—</span>
-          <span className="text-emerald-100/55">Steam Completion OS</span>
+          <span className="text-emerald-100/55">Completion Command OS</span>
         </div>
         <div className="ide-title-actions" aria-label="Actions de fenêtre">
           <Search className="h-3.5 w-3.5" />

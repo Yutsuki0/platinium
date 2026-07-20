@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   return NextResponse.json({
     ok: true,
-    app: "PLATINUM.EXE",
+    app: "FULLCLEAR // OS",
     origin: process.env.NEXTAUTH_URL || request.nextUrl.origin,
     hasAuthSecret: Boolean(process.env.NEXTAUTH_SECRET),
     hasGlobalSteamApiKey: Boolean(process.env.STEAM_API_KEY),

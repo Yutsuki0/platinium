@@ -47,7 +47,7 @@ export function Sidebar({ embedded = false }: { embedded?: boolean }) {
 
       <div className="ide-project-row">
         <ChevronDown className="h-3.5 w-3.5" />
-        <span>STEAM-PLATINUM-TRACKER</span>
+        <span>FULLCLEAR-OS</span>
       </div>
 
       <div className="ide-tree">

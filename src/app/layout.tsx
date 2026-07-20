@@ -3,8 +3,8 @@ import { AuthSessionProvider } from "@/components/providers/AuthSessionProvider"
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PLATINUM.EXE",
-  description: "Un tracker de succès Steam pensé comme une interface de chasse au 100 %.",
+  title: "FULLCLEAR // OS",
+  description: "Le système de chasse et de progression Steam conçu pour atteindre le full clear.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -15,7 +15,7 @@ type HuntEntry = {
 
 type ModeFilter = "all" | "solo" | "online" | "mixed";
 type HuntState = { mode: ModeFilter; appId: number; apiName: string } | null;
-const HUNT_KEY = "platinum-active-hunt-v1";
+const HUNT_KEY = "fullclear-active-hunt-v2";
 
 export function HuntModeClient({ entries }: { entries: HuntEntry[] }) {
   const [selectedMode, setSelectedMode] = useState<ModeFilter>("all");
@@ -46,9 +46,30 @@ export function HuntModeClient({ entries }: { entries: HuntEntry[] }) {
     : filtered.slice(0, 8);
 
   function launchHunt() {
-    const target = filtered[0];
+    if (filtered.length === 0) return;
+
+    // Le tirage se fait d’abord parmi les jeux compatibles, puis parmi les
+    // succès restants de ce jeu. Ainsi, un jeu possédant beaucoup de succès
+    // n’a pas artificiellement plus de chances d’être sélectionné.
+    const compatibleAppIds = [...new Set(filtered.map((entry) => entry.game.appId))];
+    const previousAppId = activeHunt?.appId;
+    const selectableAppIds =
+      compatibleAppIds.length > 1 && previousAppId
+        ? compatibleAppIds.filter((appId) => appId !== previousAppId)
+        : compatibleAppIds;
+
+    const randomAppId = selectableAppIds[Math.floor(Math.random() * selectableAppIds.length)];
+    const gameTargets = filtered.filter((entry) => entry.game.appId === randomAppId);
+    const target = gameTargets[Math.floor(Math.random() * gameTargets.length)];
+
     if (!target) return;
-    const next = { mode: selectedMode, appId: target.game.appId, apiName: target.achievement.apiName } satisfies NonNullable<HuntState>;
+
+    const next = {
+      mode: selectedMode,
+      appId: target.game.appId,
+      apiName: target.achievement.apiName,
+    } satisfies NonNullable<HuntState>;
+
     setActiveHunt(next);
     setCompletedSteps([]);
     localStorage.setItem(HUNT_KEY, JSON.stringify(next));
@@ -71,9 +92,9 @@ export function HuntModeClient({ entries }: { entries: HuntEntry[] }) {
     <div className="space-y-6">
       <header className="code-hero">
         <div>
-          <p className="code-kicker">$ platinum --hunt-mode</p>
+          <p className="code-kicker">$ fullclear hunt --random</p>
           <h1 className="mt-3 text-3xl font-black tracking-tight text-white md:text-5xl">Mode chasse</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">Choisis précisément le type de jeu, puis lance une mission. Le filtre ne change plus seulement l’affichage : il détermine vraiment la chasse créée.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-400">Choisis un type de jeu puis laisse FULLCLEAR tirer une mission au hasard. Chaque jeu compatible possède la même chance d’être sélectionné.</p>
         </div>
         <Crosshair className="h-24 w-24 text-emerald-300/20" />
       </header>
@@ -88,7 +109,7 @@ export function HuntModeClient({ entries }: { entries: HuntEntry[] }) {
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-emerald-400/10 pt-4">
           <p className="text-xs text-slate-400"><strong className="text-white">{filtered.length}</strong> objectif{filtered.length > 1 ? "s" : ""} compatible{filtered.length > 1 ? "s" : ""} avec « {labels[selectedMode]} »</p>
-          <button type="button" onClick={launchHunt} disabled={loading || filtered.length === 0} className="cyber-button"><Crosshair className="h-4 w-4" />Lancer cette chasse</button>
+          <button type="button" onClick={launchHunt} disabled={loading || filtered.length === 0} className="cyber-button"><Crosshair className="h-4 w-4" />Tirer une chasse aléatoire</button>
         </div>
       </section>
 

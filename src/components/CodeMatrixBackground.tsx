@@ -7,7 +7,7 @@ const SNIPPETS = [
   "achievement.unlock()",
   "SELECT * FROM trophies",
   "status: ONLINE",
-  "while (!platinum) grind()",
+  "while (!fullClear) grind()",
   "GET /api/steam/sync 200",
   "target = nextAchievement",
   "database.persist(true)",
@@ -29,17 +29,19 @@ export function CodeMatrixBackground() {
       {lines.map((line) => (
         <span
           key={line.id}
-          className="matrix-code-line"
+          className={`matrix-code-line ${line.id < 3 ? "matrix-code-line--drift" : ""}`}
           style={{
             left: `${line.left}%`,
             top: `${line.top}%`,
             opacity: line.opacity,
             fontSize: `${line.size}px`,
+            animationDelay: `${line.id * -6}s`,
           }}
         >
           <span className="matrix-prompt">&gt;</span> {line.text}
         </span>
       ))}
+      <div className="matrix-scan" />
       <div className="matrix-vignette" />
     </div>
   );

@@ -27,7 +27,7 @@ async function fetchMode(appId: number): Promise<GameMode> {
   try {
     const response = await fetch(`https://store.steampowered.com/api/appdetails?appids=${appId}&l=french`, {
       next: { revalidate: 60 * 60 * 24 * 7 },
-      headers: { "User-Agent": "PLATINUM.EXE/1.0" },
+      headers: { "User-Agent": "FULLCLEAR-OS/1.0" },
     });
     if (!response.ok) throw new Error(`Steam Store ${response.status}`);
     const payload = await response.json() as Record<string, { success?: boolean; data?: { categories?: Array<{ id?: number }> } }>;
