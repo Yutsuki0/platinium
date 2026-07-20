@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { Sidebar } from "@/components/nav/Sidebar";
 import { MobileNav } from "@/components/nav/MobileNav";
 import { CodeMatrixBackground } from "@/components/CodeMatrixBackground";
+import { EditorChrome } from "@/components/nav/EditorChrome";
 
 export default async function AppLayout({
   children,
@@ -17,12 +18,14 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="relative flex min-h-screen w-full overflow-hidden">
+    <div className="relative min-h-screen w-full overflow-hidden p-0 lg:p-3">
       <CodeMatrixBackground />
-      <Sidebar />
-      <main className="relative z-10 flex-1 px-4 pb-24 pt-4 lg:px-7 lg:pb-7 lg:pt-7">
-        {children}
-      </main>
+      <div className="relative z-10 flex min-h-screen lg:min-h-[calc(100vh-24px)]">
+        <Sidebar />
+        <div className="min-w-0 flex-1 pb-20 lg:pb-0">
+          <EditorChrome>{children}</EditorChrome>
+        </div>
+      </div>
       <MobileNav />
     </div>
   );
