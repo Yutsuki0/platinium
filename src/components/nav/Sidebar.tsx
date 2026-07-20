@@ -51,8 +51,8 @@ export function Sidebar() {
       </div>
 
       <div className="ide-tree">
-        <div className="ide-folder"><ChevronDown className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/70" /><span>src</span></div>
-        <div className="ide-folder pl-5"><ChevronDown className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/70" /><span>app</span></div>
+        <div className="ide-folder ide-tree-static"><ChevronDown className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/70" /><span>src</span></div>
+        <div className="ide-folder ide-tree-static pl-5"><ChevronDown className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/70" /><span>app</span></div>
 
         <nav className="mt-1 flex flex-col">
           {NAV_ITEMS.map(({ href, label, icon: Icon, tint }) => {
@@ -72,13 +72,13 @@ export function Sidebar() {
           })}
         </nav>
 
-        <div className="ide-folder mt-2"><ChevronRight className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/55" /><span>components</span></div>
-        <div className="ide-folder"><ChevronRight className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/55" /><span>lib</span></div>
-        <div className="ide-folder"><ChevronRight className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/55" /><span>database</span></div>
+        <div className="ide-folder ide-tree-static mt-2"><ChevronRight className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/55" /><span>components</span></div>
+        <div className="ide-folder ide-tree-static"><ChevronRight className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/55" /><span>lib</span></div>
+        <div className="ide-folder ide-tree-static"><ChevronRight className="h-3.5 w-3.5" /><FolderOpen className="h-3.5 w-3.5 text-emerald-300/55" /><span>database</span></div>
 
-        <div className="ide-static-file"><FileJson2 className="h-3.5 w-3.5 text-yellow-300" /><span>package.json</span></div>
-        <div className="ide-static-file"><FileCode2 className="h-3.5 w-3.5 text-emerald-300" /><span>next.config.mjs</span></div>
-        <div className="ide-static-file"><FileText className="h-3.5 w-3.5 text-slate-400" /><span>README.md</span></div>
+        <div className="ide-static-file ide-tree-static"><FileJson2 className="h-3.5 w-3.5 text-yellow-300" /><span>package.json</span></div>
+        <div className="ide-static-file ide-tree-static"><FileCode2 className="h-3.5 w-3.5 text-emerald-300" /><span>next.config.mjs</span></div>
+        <div className="ide-static-file ide-tree-static"><FileText className="h-3.5 w-3.5 text-slate-400" /><span>README.md</span></div>
       </div>
 
       <div className="mt-auto border-t border-emerald-400/10">
