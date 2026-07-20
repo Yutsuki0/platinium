@@ -19,6 +19,7 @@ import {
   Sparkles,
   Target,
   Trophy,
+  UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
   { href: "/objectives", label: "objectives.json", icon: Target, tint: "text-yellow-300" },
   { href: "/planner", label: "planner.ts", icon: CalendarDays, tint: "text-emerald-300" },
   { href: "/hunt", label: "hunt-mode.tsx", icon: Crosshair, tint: "text-emerald-300" },
+  { href: "/profile", label: "fullclear.profile.tsx", icon: UserRound, tint: "text-emerald-300" },
   { href: "/recommendations", label: "recommendations.ts", icon: Sparkles, tint: "text-emerald-300" },
   { href: "/statistics", label: "statistics.sql", icon: BarChart3, tint: "text-orange-300" },
   { href: "/history", label: "sync-history.log", icon: History, tint: "text-slate-400" },

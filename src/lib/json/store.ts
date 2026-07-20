@@ -12,12 +12,16 @@ export interface StoredSyncLog { id:string; userId:string; status:"RUNNING"|"SUC
 export interface StoredDlcGroup { name:string; paid:boolean; achievementApiNames:string[]; }
 export interface StoredFavoriteGame { userId:string; appId:number; createdAt:string; }
 export interface StoredGameObjective { userId:string; appId:number; status:"ACTIVE"|"PAUSED"|"COMPLETED"; priority:"LOW"|"MEDIUM"|"HIGH"; targetDate:string|null; note:string; createdAt:string; updatedAt:string; }
+export interface StoredFullClearProfile { userId:string; xp:number; huntPoints:number; huntStreak:number; bestHuntStreak:number; completedHunts:number; failedHunts:number; lastHuntDate:string|null; selectedProfile:"steam"|"fullclear"; createdAt:string; updatedAt:string; }
+export interface StoredHuntObjective { id:string; label:string; kind:"ACHIEVEMENT"|"PLAYTIME"|"PROGRESS"|"RARE"|"COMPLETE_GAME"; target:number; selected:boolean; completed:boolean; points:number; }
+export interface StoredDailyHunt { id:string; userId:string; dateKey:string; appId:number; achievementApiName:string|null; mode:"all"|"solo"|"online"|"mixed"; status:"DRAFT"|"ACTIVE"|"COMPLETED"|"EXPIRED"; startedAt:string; completedAt:string|null; baselineUnlocked:number; baselinePercentage:number; baselinePlaytimeMinutes:number; baselineAchievementNames:string[]; objectives:StoredHuntObjective[]; awardedXp:number; awardedHuntPoints:number; }
+export interface StoredProfileBadge { userId:string; badgeId:string; unlockedAt:string; tier:number; }
 export interface StoredGameResearch { userId:string; appId:number; status:"VERIFIED"|"NO_DLC_FOUND"|"UNVERIFIED"|"FAILED"; requiresPaidDlc:boolean; hiddenDescriptionsFound:number; groups:StoredDlcGroup[]; sources:{name:string;url:string}[]; checkedAt:string; error:string|null; }
-export interface JsonStore { users:StoredUser[]; games:StoredGame[]; achievements:StoredAchievement[]; achievementSummaries:StoredAchievementSummary[]; syncLogs:StoredSyncLog[]; gameResearch:StoredGameResearch[]; favoriteGames:StoredFavoriteGame[]; gameObjectives:StoredGameObjective[]; }
+export interface JsonStore { users:StoredUser[]; games:StoredGame[]; achievements:StoredAchievement[]; achievementSummaries:StoredAchievementSummary[]; syncLogs:StoredSyncLog[]; gameResearch:StoredGameResearch[]; favoriteGames:StoredFavoriteGame[]; gameObjectives:StoredGameObjective[]; fullClearProfiles:StoredFullClearProfile[]; dailyHunts:StoredDailyHunt[]; profileBadges:StoredProfileBadge[]; }
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
-const EMPTY_STORE: JsonStore = { users:[], games:[], achievements:[], achievementSummaries:[], syncLogs:[], gameResearch:[], favoriteGames:[], gameObjectives:[] };
+const EMPTY_STORE: JsonStore = { users:[], games:[], achievements:[], achievementSummaries:[], syncLogs:[], gameResearch:[], favoriteGames:[], gameObjectives:[], fullClearProfiles:[], dailyHunts:[], profileBadges:[] };
 let writeQueue: Promise<void> = Promise.resolve();
 let sqlClient: Sql | null = null;
 let databaseReady: Promise<void> | null = null;
@@ -32,6 +36,9 @@ function normalizeStore(value: Partial<JsonStore> | null | undefined): JsonStore
     gameResearch: Array.isArray(value?.gameResearch) ? value.gameResearch : [],
     favoriteGames: Array.isArray(value?.favoriteGames) ? value.favoriteGames : [],
     gameObjectives: Array.isArray(value?.gameObjectives) ? value.gameObjectives : [],
+    fullClearProfiles: Array.isArray(value?.fullClearProfiles) ? value.fullClearProfiles : [],
+    dailyHunts: Array.isArray(value?.dailyHunts) ? value.dailyHunts : [],
+    profileBadges: Array.isArray(value?.profileBadges) ? value.profileBadges : [],
   };
 }
 
@@ -162,3 +169,8 @@ export async function getResearchForGame(userId:string,appId:number){const s=awa
 export async function getFavoriteGameIds(userId:string){const s=await readStore();return s.favoriteGames.filter(x=>x.userId===userId).map(x=>x.appId);}
 export async function getGameObjectivesForUser(userId:string){const s=await readStore();return s.gameObjectives.filter(x=>x.userId===userId);}
 export async function getGameObjective(userId:string,appId:number){const s=await readStore();return s.gameObjectives.find(x=>x.userId===userId&&x.appId===appId)??null;}
+
+export async function getFullClearProfile(userId:string){const s=await readStore();return s.fullClearProfiles.find(x=>x.userId===userId)??null;}
+export async function getDailyHunt(userId:string,dateKey:string){const s=await readStore();return s.dailyHunts.find(x=>x.userId===userId&&x.dateKey===dateKey)??null;}
+export async function getHuntHistory(userId:string){const s=await readStore();return s.dailyHunts.filter(x=>x.userId===userId).sort((a,b)=>b.startedAt.localeCompare(a.startedAt));}
+export async function getProfileBadges(userId:string){const s=await readStore();return s.profileBadges.filter(x=>x.userId===userId);}

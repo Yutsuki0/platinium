@@ -4,21 +4,23 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { Sidebar } from "@/components/nav/Sidebar";
 import { EditorChrome } from "@/components/nav/EditorChrome";
+import { ProfileWindow } from "@/components/profile/ProfileWindow";
 
-type WindowId = "explorer" | "editor";
+type WindowId = "explorer" | "editor" | "profile";
 type Frame = { x: number; y: number; width: number; height: number; z: number };
 type FrameMap = Record<WindowId, Frame>;
 
 const DEFAULTS: FrameMap = {
   explorer: { x: 22, y: 24, width: 270, height: 760, z: 3 },
-  editor: { x: 310, y: 24, width: 1180, height: 860, z: 2 },
+  editor: { x: 310, y: 24, width: 1080, height: 860, z: 2 },
+  profile: { x: 1410, y: 24, width: 300, height: 480, z: 4 },
 };
 
 const STORAGE_KEY = "platinum-desktop-layout-v5";
 
 export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
   const desktopRef = useRef<HTMLDivElement>(null);
-  const windowRefs = useRef<Record<WindowId, HTMLDivElement | null>>({ explorer: null, editor: null });
+  const windowRefs = useRef<Record<WindowId, HTMLDivElement | null>>({ explorer: null, editor: null, profile: null });
   const [frames, setFrames] = useState<FrameMap>(DEFAULTS);
   const [ready, setReady] = useState(false);
 
@@ -116,6 +118,7 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
     const minimums: Record<WindowId, [number, number]> = {
       explorer: [220, 360],
       editor: [620, 440],
+      profile: [260, 360],
     };
     let nextWidth = start.width;
     let nextHeight = start.height;
@@ -197,6 +200,7 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
 
       {renderWindow("explorer", "Explorer", <Sidebar embedded />, "explorer-window")}
       {renderWindow("editor", "FULLCLEAR // COMMAND CENTER", <EditorChrome>{children}</EditorChrome>, "editor-window")}
+      {renderWindow("profile", "FULLCLEAR PROFILE", <ProfileWindow />, "profile-window")}
     </div>
   );
 }

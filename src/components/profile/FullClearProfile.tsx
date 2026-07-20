@@ -1,0 +1,20 @@
+"use client";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Award, Crosshair, Gamepad2, LockKeyhole, Trophy, type LucideIcon } from "lucide-react";
+
+type Badge={id:string;name:string;description:string;unlocked:boolean;icon:string};
+type ProfileData={user:{name:string;image:string|null};base:{achievements:number;completedGames:number;trackedGames:number};profile:{huntPoints:number;huntStreak:number;bestHuntStreak:number;completedHunts:number}|null;totalXp:number;level:number;current:number;needed:number;title:string;rank:{name:string;icon:string;progress:number;next:number};badges:Badge[]};
+export function FullClearProfile(){
+ const [data,setData]=useState<ProfileData|null>(null);
+ useEffect(()=>{fetch('/api/fullclear/profile').then(r=>r.json()).then(setData)},[]);
+ if(!data)return <div className="terminal-card p-8 text-emerald-200/50">Compilation du profil…</div>;
+ const stats: Array<[number,string,LucideIcon]> = [[data.totalXp,"XP TOTAL",Award],[data.base.achievements,"SUCCÈS",Trophy],[data.base.completedGames,"100 %",Gamepad2],[data.profile?.huntPoints??0,"HUNT POINTS",Crosshair]];
+ return <div className="space-y-6">
+  <header className="code-hero"><div className="flex items-center gap-5"><div className="relative h-24 w-24 overflow-hidden rounded-[28px] border border-emerald-300/30 bg-black/30">{data.user.image?<Image src={data.user.image} alt="" fill unoptimized className="object-cover"/>:<Trophy className="absolute inset-0 m-auto h-10 w-10 text-emerald-300"/>}</div><div><p className="code-kicker">$ fullclear profile --steam-identity</p><h1 className="mt-2 text-4xl font-black text-white">{data.user.name}</h1><p className="mt-2 text-emerald-200/60">LVL {data.level} · {data.title}</p></div></div><Image src={data.rank.icon} alt="" width={110} height={110}/></header>
+  <section className="grid gap-4 md:grid-cols-4">{stats.map(([v,l,I])=><div className="terminal-card p-5" key={String(l)}><I className="h-5 w-5 text-emerald-300"/><p className="mt-4 text-3xl font-black text-white">{String(v)}</p><p className="text-[10px] tracking-[.16em] text-slate-500">{String(l)}</p></div>)}</section>
+  <section className="terminal-card p-6"><div className="flex justify-between"><div><p className="text-xs uppercase tracking-[.18em] text-emerald-300/55">Progression niveau</p><h2 className="mt-2 text-2xl font-black text-white">Niveau {data.level}</h2></div><p className="text-sm text-slate-400">{data.current} / {data.needed} XP</p></div><div className="mt-5 h-3 overflow-hidden rounded-full bg-white/5"><span className="block h-full bg-emerald-400" style={{width:`${Math.min(100,data.current/data.needed*100)}%`}}/></div></section>
+  <section className="grid gap-6 lg:grid-cols-[.7fr_1.3fr]"><div className="terminal-card p-6 text-center"><Image src={data.rank.icon} alt="" width={150} height={150} className="mx-auto"/><p className="mt-3 text-2xl font-black text-white">{data.rank.name}</p><p className="mt-1 text-xs uppercase tracking-[.16em] text-emerald-300/55">Rang Hunt classé</p><div className="mt-5 h-2 overflow-hidden rounded-full bg-white/5"><span className="block h-full bg-emerald-400" style={{width:`${data.rank.progress/data.rank.next*100}%`}}/></div></div>
+  <div className="terminal-card p-6"><div className="flex items-center gap-2"><Award className="h-5 w-5 text-emerald-300"/><h2 className="text-xl font-black text-white">BADGES.SVG</h2></div><div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">{data.badges.map(b=><div key={b.id} className={`rounded-2xl border p-3 text-center ${b.unlocked?'border-emerald-300/25 bg-emerald-300/[.06]':'border-white/5 bg-black/20 opacity-45'}`}><div className="relative mx-auto h-16 w-16"><Image src={b.icon} alt="" fill className="object-contain"/>{!b.unlocked?<LockKeyhole className="absolute bottom-0 right-0 h-4 w-4 text-slate-500"/>:null}</div><p className="mt-2 text-[10px] font-bold text-white">{b.name}</p><p className="mt-1 text-[9px] leading-relaxed text-slate-500">{b.description}</p></div>)}</div></div></section>
+ </div>
+}
