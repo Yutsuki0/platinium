@@ -1,0 +1,7 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { getAchievementsForGame,getGameForUser,updateStore } from "@/lib/json/store";
+import { researchGame } from "@/lib/steam/research";
+export const dynamic="force-dynamic";
+export async function POST(_r:Request,{params}:{params:{appId:string}}){const session=await getServerSession(authOptions);if(!session?.user?.id)return NextResponse.json({error:"Non connecté"},{status:401});const appId=Number(params.appId);if(!Number.isInteger(appId))return NextResponse.json({error:"Jeu invalide"},{status:400});const game=await getGameForUser(session.user.id,appId);if(!game)return NextResponse.json({error:"Jeu introuvable"},{status:404});const achievements=await getAchievementsForGame(session.user.id,appId);if(achievements.length===0)return NextResponse.json({error:"Synchronise d'abord les succès"},{status:409});try{const {research,descriptions}=await researchGame(session.user.id,appId,game.name,achievements);await updateStore(store=>{store.gameResearch=store.gameResearch.filter(x=>!(x.userId===session.user.id&&x.appId===appId));store.gameResearch.push(research);for(const a of store.achievements){if(a.userId===session.user.id&&a.appId===appId&&descriptions.has(a.apiName))a.description=descriptions.get(a.apiName)!;}});return NextResponse.json({ok:true,research});}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Erreur de recherche"},{status:502});}}

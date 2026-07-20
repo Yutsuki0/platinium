@@ -1,0 +1,23 @@
+# Dépendances
+node_modules/
+
+# Fichiers générés par Next.js
+.next/
+out/
+build/
+
+# Variables secrètes
+.env
+.env.local
+.env*.local
+
+# Données personnelles locales
+data/store.json
+
+# Caches
+*.tsbuildinfo
+next-env.d.ts
+
+# Fichiers système et logs
+.DS_Store
+npm-debug.log*

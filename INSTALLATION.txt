@@ -1,0 +1,17 @@
+PLATINUM.EXE — INSTALLATION
+
+1. Décompresse le ZIP dans un nouveau dossier.
+2. Ouvre PowerShell dans ce dossier.
+3. Copie .env.example vers .env.local :
+   Copy-Item .env.example .env.local
+4. Génère un secret :
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+5. Colle le résultat dans NEXTAUTH_SECRET de .env.local.
+6. Lance :
+   npm install
+   npm run dev
+7. Ouvre http://localhost:3000
+8. Sur la page de connexion, ajoute ta clé Steam API puis connecte-toi avec Steam.
+
+La connexion Steam calcule automatiquement ses URL de retour. Il n'est plus nécessaire
+de définir STEAM_OPENID_REALM ou STEAM_OPENID_RETURN_URL.
