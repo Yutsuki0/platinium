@@ -14,7 +14,7 @@ const DEFAULTS: FrameMap = {
   editor: { x: 310, y: 24, width: 1180, height: 860, z: 2 },
 };
 
-const STORAGE_KEY = "platinum-desktop-layout-v4";
+const STORAGE_KEY = "platinum-desktop-layout-v5";
 
 export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -26,12 +26,18 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) setFrames({ ...DEFAULTS, ...JSON.parse(stored) });
-    } catch {}
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
     setReady(true);
   }, []);
 
   useEffect(() => {
-    if (ready) localStorage.setItem(STORAGE_KEY, JSON.stringify(frames));
+    if (!ready) return;
+    const timeout = window.setTimeout(() => {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(frames));
+    }, 120);
+    return () => window.clearTimeout(timeout);
   }, [frames, ready]);
 
   const bringToFront = useCallback((id: WindowId) => {
@@ -54,29 +60,44 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
     if (!node || !desktop) return;
 
     event.currentTarget.setPointerCapture?.(event.pointerId);
+    node.classList.add("is-interacting");
 
     const start = frames[id];
     const startX = event.clientX;
     const startY = event.clientY;
     let nextX = start.x;
     let nextY = start.y;
+    let frameRequest = 0;
+    let deltaX = 0;
+    let deltaY = 0;
+
+    const paint = () => {
+      frameRequest = 0;
+      node.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
+    };
 
     const onMove = (moveEvent: PointerEvent) => {
       const bounds = desktop.getBoundingClientRect();
       nextX = Math.min(bounds.width - 90, Math.max(-start.width + 90, start.x + moveEvent.clientX - startX));
       nextY = Math.min(bounds.height - 38, Math.max(0, start.y + moveEvent.clientY - startY));
-      node.style.left = `${nextX}px`;
-      node.style.top = `${nextY}px`;
+      deltaX = nextX - start.x;
+      deltaY = nextY - start.y;
+      if (!frameRequest) frameRequest = window.requestAnimationFrame(paint);
     };
 
-    const onUp = () => {
+    const finish = () => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      if (frameRequest) window.cancelAnimationFrame(frameRequest);
+      node.style.transform = "";
+      node.classList.remove("is-interacting");
       setFrames((current) => ({ ...current, [id]: { ...current[id], x: nextX, y: nextY } }));
     };
 
     window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerup", onUp, { once: true });
+    window.addEventListener("pointerup", finish, { once: true });
+    window.addEventListener("pointercancel", finish, { once: true });
   }, [bringToFront, frames]);
 
   const startResize = useCallback((id: WindowId, event: React.PointerEvent<HTMLButtonElement>) => {
@@ -88,6 +109,7 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
     const desktop = desktopRef.current;
     if (!node || !desktop) return;
 
+    node.classList.add("is-interacting");
     const start = frames[id];
     const startX = event.clientX;
     const startY = event.clientY;
@@ -97,6 +119,13 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
     };
     let nextWidth = start.width;
     let nextHeight = start.height;
+    let frameRequest = 0;
+
+    const paint = () => {
+      frameRequest = 0;
+      node.style.width = `${nextWidth}px`;
+      node.style.height = `${nextHeight}px`;
+    };
 
     const onMove = (moveEvent: PointerEvent) => {
       const bounds = desktop.getBoundingClientRect();
@@ -105,18 +134,21 @@ export function DesktopWorkspace({ children }: { children: React.ReactNode }) {
       const maxHeight = Math.max(minHeight, bounds.height - start.y - 8);
       nextWidth = Math.min(maxWidth, Math.max(minWidth, start.width + moveEvent.clientX - startX));
       nextHeight = Math.min(maxHeight, Math.max(minHeight, start.height + moveEvent.clientY - startY));
-      node.style.width = `${nextWidth}px`;
-      node.style.height = `${nextHeight}px`;
+      if (!frameRequest) frameRequest = window.requestAnimationFrame(paint);
     };
 
-    const onUp = () => {
+    const finish = () => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      if (frameRequest) window.cancelAnimationFrame(frameRequest);
+      node.classList.remove("is-interacting");
       setFrames((current) => ({ ...current, [id]: { ...current[id], width: nextWidth, height: nextHeight } }));
     };
 
     window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerup", onUp, { once: true });
+    window.addEventListener("pointerup", finish, { once: true });
+    window.addEventListener("pointercancel", finish, { once: true });
   }, [bringToFront, frames]);
 
   const reset = () => {

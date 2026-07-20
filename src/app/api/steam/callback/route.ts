@@ -52,10 +52,8 @@ export async function GET(request: NextRequest) {
 
     const message =
       error instanceof SteamServiceError
-        ? error.message
-        : error instanceof Error
-          ? error.message
-          : "La connexion avec Steam a échoué. Merci de réessayer.";
+        ? "Steam a refusé ou interrompu la connexion. Merci de réessayer."
+        : "La connexion avec Steam a échoué. Merci de réessayer.";
 
     const redirectUrl = new URL("/login", origin);
     redirectUrl.searchParams.set("error", message);

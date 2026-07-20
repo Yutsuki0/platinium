@@ -368,3 +368,79 @@ body::before { opacity: .16; }
 @media (prefers-reduced-motion: no-preference) {
   .desktop-window { transition: box-shadow .16s ease, border-color .16s ease; }
 }
+
+/* ===== PERFORMANCE V5 — reduced GPU compositing and smoother drag ===== */
+body {
+  background-attachment: scroll;
+}
+
+body::before {
+  position: absolute;
+  mix-blend-mode: normal;
+  opacity: .09;
+}
+
+.matrix-stage {
+  contain: strict;
+}
+
+.matrix-grid {
+  opacity: .42;
+  transform: perspective(900px) rotateX(62deg) translateY(35%);
+}
+
+.matrix-code-line {
+  animation: none !important;
+  text-shadow: 0 0 8px rgba(53,255,122,.22);
+}
+
+.matrix-scan {
+  display: none !important;
+}
+
+.desktop-window {
+  will-change: auto !important;
+  transform: none;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background: linear-gradient(145deg, rgba(4,24,13,.97), rgba(0,9,5,.95));
+  box-shadow: 0 20px 54px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+.desktop-window.is-interacting {
+  will-change: transform, width, height !important;
+  box-shadow: 0 12px 34px rgba(0,0,0,.36);
+  transition: none !important;
+  user-select: none;
+}
+
+.desktop-reset,
+.glass-panel,
+.glass-panel-strong,
+.terminal-card,
+.terminal-shell,
+.mission-card,
+.hunt-objectives-panel,
+.freeform-handle {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.glass-panel,
+.glass-panel-strong,
+.terminal-card,
+.terminal-shell,
+.mission-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 280px;
+}
+
+.desktop-window::before {
+  opacity: .28;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .desktop-window:not(.is-interacting) {
+    transition: box-shadow .12s ease, border-color .12s ease;
+  }
+}

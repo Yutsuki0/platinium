@@ -5,7 +5,13 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "crypt
 const COOKIE_NAME = "pt_steam_api_key";
 
 function secretKey() {
-  const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "local-development-only-change-me";
+  const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("NEXTAUTH_SECRET doit être défini en production.");
+    }
+    return createHash("sha256").update("local-development-only-change-me").digest();
+  }
   return createHash("sha256").update(secret).digest();
 }
 
@@ -21,6 +27,7 @@ export function decryptSteamApiKey(value?: string | null) {
   if (!value) return null;
   try {
     const raw = Buffer.from(value, "base64url");
+    if (raw.length < 29) return null;
     const iv = raw.subarray(0, 12);
     const tag = raw.subarray(12, 28);
     const encrypted = raw.subarray(28);
